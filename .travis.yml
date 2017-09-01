@@ -1,0 +1,14 @@
+language: bash
+
+script:
+- bash build.sh
+
+deploy:
+  provider: releases
+  api_key:
+    secure: inHTc4wXCfCr1ssLi0k7qDDk2FfV2VqbGHnOBnpeOk8mibHzXf2+qHHcZMS/gYWY2v/xARnbQqeuSg7Nq8VbTHAgSvp/CMd0+y9aeq0VV6FM2rFeuyD7ZVTb3dkdRpYcqgUK2M1BiJfyHAwzeuNZhkUEYU6yObYCtjYPaeM8zh7espLI4qOpit5Cqp+VrzYIRsQU6wY3SUuV0l/VasVVTQxYbowg2GSHsksYE3XOGRwJswTf4B9jeQEF8ZZGCNrxSACtXGukYB1rIKDTDtOie+JemQdW2XHT3pwSLlvX11a7zMbN6R7X7asCYOXCEvy8AoFnKlEsgaLFgrAhDrQjTzXqGbLxdOxpdU2W7oMO4utHsVxMKan22h9wdGCsNOGknYb9N33DOBao39M8DP4Hyqr9ux9ltC2MF4EhvciQ86/C0o3eIm7JFgOL09YW1ICJskBk/OAn8lEr0uq5/AtLQJV6Rjqo0VgkhY2Pjp9pWaljdVckguWi6BVTs0a3FwhJ15BoCeANiV5ubnrZkrF0CI5kCuOAhKUFTJboJ+x7SWQQYtz+ECVvcSYDHTyRDHSkf5auB4/4N1sdh4M9GQ9/wtQ71xPZTws0sxThhwsHflpeWcv42XsWXoNMXkooaxxPeSO9Ahii+/txScldE4ogMwz8kc46ZoPyWSgF8TtJkb4=
+  file: accropolis-extension.zip
+  skip_cleanup: true
+  on:
+    repo: Accropolis/brower-extension
+    tags: true
