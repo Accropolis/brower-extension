@@ -1,0 +1,6 @@
+{
+  "title"       : { "message": "Accropolis" },
+  "description" : { "message": "Cette extension vous informe dès qu'un live est en cours !" },
+  "badge"       : { "message": "live" },
+  "notification": { "message": "Un live est en cours !" }
+}
