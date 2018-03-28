@@ -1,39 +1,39 @@
 (function(browser) {
 
-  // Useful constants
-  // --------------------------------------------------------------------------
-  const TWITCH_ID = "gjds1hg0hy0zanu764903orz2adzsy";
-  const TWITCH_URL = "https://api.twitch.tv/kraken/streams/accropolis?client_id=" + TWITCH_ID;
-  const DELAY = 10; // minute
+    // Useful constants
+    // --------------------------------------------------------------------------
+    const TWITCH_ID = "gjds1hg0hy0zanu764903orz2adzsy";
+    const TWITCH_URL = "https://api.twitch.tv/kraken/streams/accropolis?client_id=" + TWITCH_ID;
+    const DELAY = 10; // minute
 
-  // Global status
-  // --------------------------------------------------------------------------
-  var isLive = false;
+    // Global status
+    // --------------------------------------------------------------------------
+    var isLive = false;
 
-  // Extension logic
-  // --------------------------------------------------------------------------
+    // Extension logic
+    // --------------------------------------------------------------------------
 
-  // Open a new tab to the most adequate Accropolis web page
-  //
-  // @return { Promise }
-  async function openTab() {
-    console.log("Opening tab");
-    await browser.ta  bs.create({
-      url: isLive ? "https://www.twitch.tv/accropolis" : "http://accropolis.fr"
-    })
-  }
+    // Open a new tab to the most adequate Accropolis web page
+    //
+    // @return { Promise }
+    async function openTab() {
+      console.log("Opening tab");
+      await browser.tabs.create({
+        url: isLive ? "https://www.twitch.tv/accropolis" : "http://accropolis.fr"
+      })
+    }
 
-  // Call the Twitch API to check is a liveis in progress
-  //
-  // @return { Promise => Boolean }
-  async function checkLiveStatus() {
-    var data = await fetch(TWITCH_URL).then((data) => {
-      return data.json()
-    });
-    var isOn = Boolean(data.stream //stream is online
-      &&
-      ((data.stream.channel && data.stream.channel.status && data.stream.channel.status.indexOf("[Rediffusions]") === -1) //title contains [Rediffusions]
-      || data.stream.stream_type === "live")) //or the stream is live https://dev.twitch.tv/docs/v5/reference/streams/#get-live-streams
+    // Call the Twitch API to check is a liveis in progress
+    //
+    // @return { Promise => Boolean }
+    async function checkLiveStatus() {
+      var data = await fetch(TWITCH_URL).then((data) => {
+        return data.json()
+      });
+      var isOn = Boolean(data.stream //stream is online
+        &&
+        data.stream.stream_type === "live") //the stream is live https://dev.twitch.tv/docs/v5/reference/streams/#get-live-streams
+
 
     return isOn ? data : null
   }
