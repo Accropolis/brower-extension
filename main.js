@@ -1,9 +1,10 @@
-(function (browser) {
+(function(browser) {
 
   // Useful constants
   // --------------------------------------------------------------------------
-  const TWITCH_ID  = "gjds1hg0hy0zanu764903orz2adzsy";
+  const TWITCH_ID = "gjds1hg0hy0zanu764903orz2adzsy";
   const TWITCH_URL = "https://api.twitch.tv/kraken/streams/accropolis?client_id=" + TWITCH_ID;
+  const DELAY = 10; // minute
 
   // Global status
   // --------------------------------------------------------------------------
@@ -17,9 +18,8 @@
   // @return { Promise }
   async function openTab() {
     console.log("Opening tab");
-    await browser.tabs.create({
-      url: isLive ? "https://www.twitch.tv/accropolis"
-                  : "http://accropolis.fr"
+    await browser.ta  bs.create({
+      url: isLive ? "https://www.twitch.tv/accropolis" : "http://accropolis.fr"
     })
   }
 
@@ -27,14 +27,15 @@
   //
   // @return { Promise => Boolean }
   async function checkLiveStatus() {
-    var data = await fetch(TWITCH_URL).then((data) => { return data.json() });
+    var data = await fetch(TWITCH_URL).then((data) => {
+      return data.json()
+    });
+    var isOn = Boolean(data.stream //stream is online
+      &&
+      ((data.stream.channel && data.stream.channel.status && data.stream.channel.status.indexOf("[Rediffusions]") === -1) //title contains [Rediffusions]
+      || data.stream.stream_type === "live")) //or the stream is live https://dev.twitch.tv/docs/v5/reference/streams/#get-live-streams
 
-    return Boolean(
-         data.stream
-      && data.stream.channel
-      && data.stream.channel.status
-      && data.stream.channel.status.indexOf("[Rediffusions]") === -1
-    );
+    return isOn ? data : null
   }
 
   // Update the browser action badge
@@ -47,14 +48,16 @@
   // Display a notification indicating a live is in progress
   function setNotification() {
     // MS Edge doesn't support notifications yet
-    if (!browser.notifications) { return; }
+    if (!browser.notifications) {
+      return;
+    }
 
     browser.notifications.create("AccropolisLive", {
-      type        : "basic",
-      title       : browser.i18n.getMessage("title"),
-      message     : browser.i18n.getMessage("notification"),
-      iconUrl     : "icons/accropolis.svg",
-      isClickable : true
+      type: "basic",
+      title: browser.i18n.getMessage("title"),
+      message: browser.i18n.getMessage("notification"),
+      iconUrl: "icons/accropolis.svg",
+      isClickable: true
     })
   }
 
@@ -64,21 +67,33 @@
   //
   // @return { Promise }
   async function onLiveChange() {
-    var isOn = await checkLiveStatus();
+    var data = await checkLiveStatus();
+    var isOn = data != null
+    var timeout = 12000
 
     if (isLive !== isOn) {
-      isLive = isOn;
-      setBadgeText(isLive);
+      var startWithDelay = new Date(data.stream.created_at).getTime() + DELAY * 60 * 1000;
+      var now = new Date().getTime()
+      if (startWithDelay > now) {
+        timeout = startWithDelay - now
+      } else {
+        isLive = isOn;
+        setBadgeText(isLive);
 
-      if(isLive) { setNotification() }
+        if (isLive) {
+          setNotification()
+        }
+      }
     }
 
-    setTimeout(onLiveChange, 120000)
+    setTimeout(onLiveChange, timeout)
   }
 
   // Basic set up
   // --------------------------------------------------------------------------
-  browser.browserAction.setBadgeBackgroundColor({ color: "#07D21F" });
+  browser.browserAction.setBadgeBackgroundColor({
+    color: "#07D21F"
+  });
 
   // Set up events
   // --------------------------------------------------------------------------
