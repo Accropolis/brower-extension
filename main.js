@@ -1,38 +1,43 @@
+
+
 (function(browser) {
 
-    // Useful constants
-    // --------------------------------------------------------------------------
-    const TWITCH_ID = "gjds1hg0hy0zanu764903orz2adzsy";
-    const TWITCH_URL = "https://api.twitch.tv/kraken/streams/accropolis?client_id=" + TWITCH_ID;
-    const DELAY = 10; // minute
+  // Useful constants
+  // --------------------------------------------------------------------------
+  const TWITCH_ID = "gjds1hg0hy0zanu764903orz2adzsy";
+  const TWITCH_URL = "https://api.twitch.tv/kraken/streams/woollx?client_id=" + TWITCH_ID;
+  const DELAY = 10; // minute
+  const REFRESH_TIME = 2 * 60 * 1000; //2min
 
-    // Global status
-    // --------------------------------------------------------------------------
-    var isLive = false;
+  // Global status
+  // --------------------------------------------------------------------------
+  var isLive = false;
+  var interval = null;
+  var timeout = null;
 
-    // Extension logic
-    // --------------------------------------------------------------------------
+  // Extension logic
+  // --------------------------------------------------------------------------
 
-    // Open a new tab to the most adequate Accropolis web page
-    //
-    // @return { Promise }
-    async function openTab() {
-      console.log("Opening tab");
-      await browser.tabs.create({
-        url: isLive ? "https://www.twitch.tv/accropolis" : "http://accropolis.fr"
-      })
-    }
+  // Open a new tab to the most adequate Accropolis web page
+  //
+  // @return { Promise }
+  async function openTab() {
+    console.log("Opening tab");
+    await browser.tabs.create({
+      url: isLive ? "https://www.twitch.tv/accropolis" : "http://accropolis.fr"
+    })
+  }
 
-    // Call the Twitch API to check is a liveis in progress
-    //
-    // @return { Promise => Boolean }
-    async function checkLiveStatus() {
-      var data = await fetch(TWITCH_URL).then((data) => {
-        return data.json()
-      });
-      var isOn = Boolean(data.stream //stream is online
-        &&
-        data.stream.stream_type === "live") //the stream is live https://dev.twitch.tv/docs/v5/reference/streams/#get-live-streams
+  // Call the Twitch API to check is a liveis in progress
+  //
+  // @return { Promise => Boolean }
+  async function checkLiveStatus() {
+    var data = await fetch(TWITCH_URL).then((data) => {
+      return data.json()
+    });
+    var isOn = Boolean(data.stream //stream is online
+      &&
+      data.stream.stream_type === "live") //the stream is live https://dev.twitch.tv/docs/v5/reference/streams/#get-live-streams
 
 
     return isOn ? data : null
@@ -61,33 +66,45 @@
     })
   }
 
-  // Update the extension status on a regular basis
-  //
   // The extension check if a live is in progress or not every 2min
+  // Timeout the start of ([DELAY] min + 1 sec)
   //
   // @return { Promise }
   async function onLiveChange() {
-    var data = await checkLiveStatus();
+    var data = await checkLiveStatus()
     var isOn = data != null
-    var timeout = 12000
+    var startWithDelay = 0
+    var now = 0
+    var time = 0
 
-    if (isLive !== isOn) {
-      var startWithDelay = new Date(data.stream.created_at).getTime() + DELAY * 60 * 1000;
-      var now = new Date().getTime()
-      if (startWithDelay > now) {
-        timeout = startWithDelay - now
-      } else {
-        isLive = isOn;
-        setBadgeText(isLive);
+    if(isOn && !isLive){
+      startWithDelay = new Date(data.stream.created_at).getTime() + DELAY * 60 * 1000 // [DELAY] * 1 min
+      now = new Date().getTime()
 
-        if (isLive) {
-          setNotification()
+      if (startWithDelay + 1000 > now) {
+        isOn = false
+        time = startWithDelay + 1000 - now
+        if(!timeout){
+          timeout = setTimeout(onLiveChange, time)
+        }
+      }else{
+        if(timeout){
+          clearTimeout(timeout);
+          timeout = null;
         }
       }
     }
 
-    setTimeout(onLiveChange, timeout)
+    if (isLive !== isOn) {
+      isLive = isOn;
+      setBadgeText(isLive);
+
+      if (isLive) {
+        setNotification()
+      }
+    }
   }
+
 
   // Basic set up
   // --------------------------------------------------------------------------
@@ -106,6 +123,7 @@
 
   // Start checking the live status
   // --------------------------------------------------------------------------
-  onLiveChange();
+  interval = setInterval(onLiveChange, REFRESH_TIME)
+  onLiveChange()
 
 }(window.browser || window.chrome));
