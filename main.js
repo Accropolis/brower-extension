@@ -5,7 +5,7 @@
   // Useful constants
   // --------------------------------------------------------------------------
   const TWITCH_ID = "gjds1hg0hy0zanu764903orz2adzsy";
-  const TWITCH_URL = "https://api.twitch.tv/kraken/streams/woollx?client_id=" + TWITCH_ID;
+  const TWITCH_URL = "https://api.twitch.tv/kraken/streams/accropolis?client_id=" + TWITCH_ID;
   const DELAY = 10; // minute
   const REFRESH_TIME = 2 * 60 * 1000; //2min
 
