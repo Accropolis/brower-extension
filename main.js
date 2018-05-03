@@ -12,8 +12,6 @@
   // Global status
   // --------------------------------------------------------------------------
   var isLive = false;
-  var interval = null;
-  var timeout = null;
 
   // Extension logic
   // --------------------------------------------------------------------------
@@ -75,7 +73,7 @@
     var isOn = data != null
     var startWithDelay = 0
     var now = 0
-    var time = 0
+    var delay = 0
 
     if(isOn && !isLive){
       startWithDelay = new Date(data.stream.created_at).getTime() + DELAY * 60 * 1000 // [DELAY] * 1 min
@@ -83,26 +81,23 @@
 
       if (startWithDelay + 1000 > now) {
         isOn = false
-        time = startWithDelay + 1000 - now
-        if(!timeout){
-          timeout = setTimeout(onLiveChange, time)
-        }
+        delay = startWithDelay - now
       }else{
-        if(timeout){
-          clearTimeout(timeout);
-          timeout = null;
-        }
+        delay = REFRESH_TIME
       }
+    }else{
+      delay = REFRESH_TIME
     }
 
     if (isLive !== isOn) {
       isLive = isOn;
       setBadgeText(isLive);
-
       if (isLive) {
         setNotification()
       }
     }
+
+    setTimeout(onLiveChange, delay)
   }
 
 
@@ -123,7 +118,6 @@
 
   // Start checking the live status
   // --------------------------------------------------------------------------
-  interval = setInterval(onLiveChange, REFRESH_TIME)
   onLiveChange()
 
 }(window.browser || window.chrome));
