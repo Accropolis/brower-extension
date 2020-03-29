@@ -5,7 +5,7 @@
   // Useful constants
   // --------------------------------------------------------------------------
   const TWITCH_ID = "gjds1hg0hy0zanu764903orz2adzsy";
-  const TWITCH_URL = "https://api.twitch.tv/kraken/streams/accropolis?client_id=" + TWITCH_ID;
+  const TWITCH_URL = "https://api.twitch.tv/helix/streams?user_login=accropolis";
   const DELAY = 10; // minute
   const REFRESH_TIME = 2 * 60 * 1000; //2min
 
@@ -30,13 +30,16 @@
   //
   // @return { Promise => Boolean }
   async function checkLiveStatus() {
-    var data = await fetch(TWITCH_URL).then((data) => {
+    var data = await fetch(TWITCH_URL,{
+      headers: {
+        'Client-ID': TWITCH_ID
+      }}).then((data) => {
       return data.json()
     });
-    var isOn = Boolean(data.stream //stream is online
-      &&
-      data.stream.stream_type === "live") //the stream is live https://dev.twitch.tv/docs/v5/reference/streams/#get-live-streams
 
+    var isOn = Boolean(Array.isArray(data.data) //stream is online
+      &&
+      data.data.length) //the stream is live https://dev.twitch.tv/docs/api/reference#get-streams
 
     return isOn ? data : null
   }
@@ -76,7 +79,7 @@
     var delay = 0
 
     if(isOn && !isLive){
-      startWithDelay = new Date(data.stream.created_at).getTime() + DELAY * 60 * 1000 // [DELAY] * 1 min
+      startWithDelay = new Date(data.data[0].started_at).getTime() + DELAY * 60 * 1000 // [DELAY] * 1 min
       now = new Date().getTime()
 
       if (startWithDelay + 1000 > now) {
