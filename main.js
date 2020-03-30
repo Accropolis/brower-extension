@@ -62,7 +62,7 @@
       type: "basic",
       title: browser.i18n.getMessage("title"),
       message: browser.i18n.getMessage("notification"),
-      iconUrl: "icons/accropolis.svg",
+      iconUrl: "icons/accropolis96.png",
       isClickable: true
     })
   }

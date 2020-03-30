@@ -7,8 +7,8 @@
   "description": "__MSG_description__",
 
   "icons": {
-    "48": "icons/accropolis.svg",
-    "96": "icons/accropolis.svg"
+    "48": "icons/accropolis48.png",
+    "96": "icons/accropolis96.png"
   },
 
   "permissions": [
@@ -23,7 +23,7 @@
   },
 
   "browser_action": {
-    "default_icon" : "icons/accropolis.svg",
+    "default_icon" : "icons/accropolis96.png",
     "default_title": "__MSG_title__"
   }
 }
