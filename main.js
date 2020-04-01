@@ -41,7 +41,7 @@
       &&
       data.data.length) //the stream is live https://dev.twitch.tv/docs/api/reference#get-streams
 
-    return isOn ? data : null
+    return isOn ? data.data[0] : null
   }
 
   // Update the browser action badge
@@ -52,7 +52,7 @@
   }
 
   // Display a notification indicating a live is in progress
-  function setNotification() {
+  function setNotification(streamTitle) {
     // MS Edge doesn't support notifications yet
     if (!browser.notifications) {
       return;
@@ -61,7 +61,7 @@
     browser.notifications.create("AccropolisLive", {
       type: "basic",
       title: browser.i18n.getMessage("title"),
-      message: browser.i18n.getMessage("notification"),
+      message: browser.i18n.getMessage("notification", streamTitle),
       iconUrl: "icons/accropolis96.png",
       isClickable: true
     })
@@ -79,7 +79,7 @@
     var delay = 0
 
     if(isOn && !isLive){
-      startWithDelay = new Date(data.data[0].started_at).getTime() + DELAY * 60 * 1000 // [DELAY] * 1 min
+      startWithDelay = new Date(data.started_at).getTime() + DELAY * 60 * 1000 // [DELAY] * 1 min
       now = new Date().getTime()
 
       if (startWithDelay + 1000 > now) {
@@ -96,7 +96,8 @@
       isLive = isOn;
       setBadgeText(isLive);
       if (isLive) {
-        setNotification()
+        var streamTitle = (isOn) ? data.title : "";
+        setNotification(streamTitle)
       }
     }
 
