@@ -12,7 +12,7 @@
 
   // Global status
   // --------------------------------------------------------------------------
-  let accessToken = null;
+  let oauth = null;
   var isLive = false;
 
   // Extension logic
@@ -42,9 +42,10 @@
         grant_type: "client_credentials"
       })
     });
-    accessToken = await res.json();
+    oauth = await res.json();
 
-    setTimeout(retrieveAccessToken, accessToken.expires_in - 5 * 60);
+    // We'll ask for a new access token 5 minute before
+    setTimeout(retrieveAccessToken, oauth.expires_in - 5 * 60);
   }
 
   // Call the Twitch API to check is a liveis in progress
@@ -141,8 +142,6 @@
     browser.notifications.onClicked.addListener(openTab);
   }
 
-  // Start checking the live status
-  // --------------------------------------------------------------------------
-  onLiveChange()
-
-}(window.browser || window.chrome));
+  // Retrieves access token then we start to check live status
+  retrieveAccessToken().then(() => onLiveChange());
+})(window.browser || window.chrome);
