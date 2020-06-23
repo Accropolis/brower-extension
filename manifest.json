@@ -12,7 +12,8 @@
   },
 
   "permissions": [
-    "notifications"
+    "notifications",
+    "storage"
   ],
 
   "background": {
