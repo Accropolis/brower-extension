@@ -1,5 +1,3 @@
-
-
 (function(browser) {
 
   // Useful constants
