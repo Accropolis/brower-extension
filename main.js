@@ -1,16 +1,16 @@
-
-
 (function(browser) {
 
   // Useful constants
   // --------------------------------------------------------------------------
   const TWITCH_ID = "gjds1hg0hy0zanu764903orz2adzsy";
   const TWITCH_URL = "https://api.twitch.tv/helix/streams?user_login=accropolis";
+  const TWITCH_SECRET = "";
   const DELAY = 10; // minute
   const REFRESH_TIME = 2 * 60 * 1000; //2min
 
   // Global status
   // --------------------------------------------------------------------------
+  let oauth = null;
   var isLive = false;
 
   // Extension logic
@@ -26,22 +26,49 @@
     })
   }
 
-  // Call the Twitch API to check is a liveis in progress
-  //
-  // @return { Promise => Boolean }
+  /**
+   * Requests an access token to Twitch authentication API.
+   * @async
+   * @returns {Promise<void>}
+   */
+  async function retrieveAccessToken() {
+    const data = await browser.storage.local.get("oauth");
+
+    // If there is no oauth token or if it's expired, we'll retrieve a new one from Twitch
+    if (!data.oauth || new Date() >= new Date(data.oauth.emitted_at + data.oauth.expires_in)) {
+      const res = await fetch(`https://id.twitch.tv/oauth2/token`, {
+        method: 'POST',
+        body: new URLSearchParams({
+          client_id: TWITCH_ID,
+          client_secret: TWITCH_SECRET,
+          grant_type: "client_credentials"
+        })
+      });
+      oauth = await res.json();
+      oauth.emitted_at = Date.now();
+
+      await browser.storage.local.set({ oauth })
+    } else {
+      oauth = data.oauth
+    }
+  }
+
+  /**
+   * Call the Twitch API to check is a liveis in progress
+   * @returns {Promise<boolean>}
+   */
   async function checkLiveStatus() {
-    var data = await fetch(TWITCH_URL,{
+    const streams = await fetch(TWITCH_URL, {
       headers: {
-        'Client-ID': TWITCH_ID
-      }}).then((data) => {
-      return data.json()
-    });
+        "Authorization": `Bearer ${oauth.access_token}`,
+        "Client-ID": TWITCH_ID
+      }
+    }).then(res => res.json());
 
-    var isOn = Boolean(Array.isArray(data.data) //stream is online
-      &&
-      data.data.length) //the stream is live https://dev.twitch.tv/docs/api/reference#get-streams
-
-    return isOn ? data.data[0] : null
+    // Computing condition to tell if the stream is live or not.
+    // Further information here: https://dev.twitch.tv/docs/api/reference#get-streams
+    const isOn = Boolean(Array.isArray(streams.data) && streams.data.length);
+    return isOn ? streams.data[0] : null
   }
 
   // Update the browser action badge
@@ -120,8 +147,6 @@
     browser.notifications.onClicked.addListener(openTab);
   }
 
-  // Start checking the live status
-  // --------------------------------------------------------------------------
-  onLiveChange()
-
-}(window.browser || window.chrome));
+  // Retrieves access token then we start to check live status
+  retrieveAccessToken().then(onLiveChange);
+})(window.browser || window.chrome);
