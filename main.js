@@ -34,18 +34,25 @@
    * @returns {Promise<void>}
    */
   async function retrieveAccessToken() {
-    const res = await fetch("https://id.twitch.tv/oauth2/token", {
-      method: 'POST',
-      body: new URLSearchParams({
-        client_id: TWITCH_ID,
-        client_secret: TWITCH_SECRET,
-        grant_type: "client_credentials"
-      })
-    });
-    oauth = await res.json();
+    const data = await browser.storage.local.get("oauth");
 
-    // We'll ask for a new access token 5 minute before
-    setTimeout(retrieveAccessToken, oauth.expires_in - 5 * 60);
+    // If there is no oauth token or if it's expired, we'll retrieve a new one from Twitch
+    if (!data.oauth || new Date() >= new Date(data.oauth.emitted_at + data.oauth.expires_in)) {
+      const res = await fetch(`https://id.twitch.tv/oauth2/token`, {
+        method: 'POST',
+        body: new URLSearchParams({
+          client_id: TWITCH_ID,
+          client_secret: TWITCH_SECRET,
+          grant_type: "client_credentials"
+        })
+      });
+      oauth = await res.json();
+      oauth.emitted_at = Date.now();
+
+      await browser.storage.local.set({ oauth })
+    } else {
+      oauth = data.oauth
+    }
   }
 
   // Call the Twitch API to check is a liveis in progress
@@ -54,6 +61,7 @@
   async function checkLiveStatus() {
     var data = await fetch(TWITCH_URL,{
       headers: {
+        'Authorization': `Bearer ${oauth.access_token}`,
         'Client-ID': TWITCH_ID
       }}).then((data) => {
       return data.json()
@@ -143,5 +151,5 @@
   }
 
   // Retrieves access token then we start to check live status
-  retrieveAccessToken().then(() => onLiveChange());
+  retrieveAccessToken().then(onLiveChange);
 })(window.browser || window.chrome);
