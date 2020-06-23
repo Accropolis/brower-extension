@@ -55,23 +55,22 @@
     }
   }
 
-  // Call the Twitch API to check is a liveis in progress
-  //
-  // @return { Promise => Boolean }
+  /**
+   * Call the Twitch API to check is a liveis in progress
+   * @returns {Promise<boolean>}
+   */
   async function checkLiveStatus() {
-    var data = await fetch(TWITCH_URL,{
+    const streams = await fetch(TWITCH_URL, {
       headers: {
-        'Authorization': `Bearer ${oauth.access_token}`,
-        'Client-ID': TWITCH_ID
-      }}).then((data) => {
-      return data.json()
-    });
+        "Authorization": `Bearer ${oauth.access_token}`,
+        "Client-ID": TWITCH_ID
+      }
+    }).then(res => res.json());
 
-    var isOn = Boolean(Array.isArray(data.data) //stream is online
-      &&
-      data.data.length) //the stream is live https://dev.twitch.tv/docs/api/reference#get-streams
-
-    return isOn ? data.data[0] : null
+    // Computing condition to tell if the stream is live or not.
+    // Further information here: https://dev.twitch.tv/docs/api/reference#get-streams
+    const isOn = Boolean(Array.isArray(streams.data) && streams.data.length);
+    return isOn ? streams.data[0] : null
   }
 
   // Update the browser action badge
