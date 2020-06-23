@@ -6,11 +6,13 @@
   // --------------------------------------------------------------------------
   const TWITCH_ID = "gjds1hg0hy0zanu764903orz2adzsy";
   const TWITCH_URL = "https://api.twitch.tv/helix/streams?user_login=accropolis";
+  const TWITCH_SECRET = "";
   const DELAY = 10; // minute
   const REFRESH_TIME = 2 * 60 * 1000; //2min
 
   // Global status
   // --------------------------------------------------------------------------
+  let accessToken = null;
   var isLive = false;
 
   // Extension logic
@@ -24,6 +26,25 @@
     await browser.tabs.create({
       url: isLive ? "https://www.twitch.tv/accropolis" : "http://accropolis.fr"
     })
+  }
+
+  /**
+   * Requests an access token to Twitch authentication API.
+   * @async
+   * @returns {Promise<void>}
+   */
+  async function retrieveAccessToken() {
+    const res = await fetch("https://id.twitch.tv/oauth2/token", {
+      method: 'POST',
+      body: new URLSearchParams({
+        client_id: TWITCH_ID,
+        client_secret: TWITCH_SECRET,
+        grant_type: "client_credentials"
+      })
+    });
+    accessToken = await res.json();
+
+    setTimeout(retrieveAccessToken, accessToken.expires_in - 5 * 60);
   }
 
   // Call the Twitch API to check is a liveis in progress
